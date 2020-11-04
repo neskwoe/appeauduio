@@ -13,23 +13,45 @@
 # limitations under the License.
 
 # [START gae_python38_app]
-from flask import Flask
+def run_quickstart():
+    # [START speech_quickstart]
+    import io
+    import os
+    import logging
+    import cloudstorage as gcs
+    import webapp2
+    
+    # Imports the Google Cloud client library
+    # [START speech_python_migration_imports]
+    from google.cloud import speech
 
+    # [END speech_python_migration_imports]
 
-# If `entrypoint` is not defined in app.yaml, App Engine will look for an app
-# called `app` in `main.py`.
-app = Flask(__name__)
+    # Instantiates a client
+    # [START speech_python_migration_client]
+    client = speech.SpeechClient()
+    # [END speech_python_migration_client]
 
+    # The name of the audio file to transcribe
+    file_name = os.path.join(os.path.dirname(__file__), "resources", "audio.raw")
 
-@app.route('/')
-def hello():
-    """Return a friendly HTTP greeting."""
-    return 'Hello World!'
+    # Loads the audio into memory
+    with io.open(file_name, "E:\BaiduNetdiskDownload\audiofiles\test1.MP3") as audio_file:
+        content = audio_file.read()
+        audio = speech.RecognitionAudio(content=content)
 
+    config = speech.RecognitionConfig(
+        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+        sample_rate_hertz=16000,
+        language_code="en-US",
+    )
 
-if __name__ == '__main__':
-    # This is used when running locally only. When deploying to Google App
-    # Engine, a webserver process such as Gunicorn will serve the app. This
-    # can be configured by adding an `entrypoint` to app.yaml.
-    app.run(host='127.0.0.1', port=8080, debug=True)
-# [END gae_python38_app]
+    # Detects speech in the audio file
+    response = client.recognize(config=config, audio=audio)
+
+    for result in response.results:
+        print("Transcript: {}".format(result.alternatives[0].transcript))
+    # [END speech_quickstart]
+
+if __name__ == "__main__":
+    run_quickstart()
